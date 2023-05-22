@@ -38,6 +38,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Persistence", "src\orderSer
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebAPI", "src\orderService\WebAPI\WebAPI.csproj", "{3778270F-29F9-4509-9BDB-CC6BC1D9E8C9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.EventBus", "src\corePackages\Core.EventBus\Core.EventBus.csproj", "{742068D9-FA3F-4A0D-84AC-AF83A5BFD3C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -100,6 +102,10 @@ Global
 		{3778270F-29F9-4509-9BDB-CC6BC1D9E8C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3778270F-29F9-4509-9BDB-CC6BC1D9E8C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3778270F-29F9-4509-9BDB-CC6BC1D9E8C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{742068D9-FA3F-4A0D-84AC-AF83A5BFD3C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{742068D9-FA3F-4A0D-84AC-AF83A5BFD3C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{742068D9-FA3F-4A0D-84AC-AF83A5BFD3C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{742068D9-FA3F-4A0D-84AC-AF83A5BFD3C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -122,6 +128,7 @@ Global
 		{24C63BD2-0E04-4F83-9B73-F3FA6160F47E} = {5915494C-75EA-4D22-8965-9FF2FA9B4BF9}
 		{0BDCB339-1E67-489F-AED0-4D9FE5CE67F7} = {5915494C-75EA-4D22-8965-9FF2FA9B4BF9}
 		{3778270F-29F9-4509-9BDB-CC6BC1D9E8C9} = {5915494C-75EA-4D22-8965-9FF2FA9B4BF9}
+		{742068D9-FA3F-4A0D-84AC-AF83A5BFD3C2} = {403A7B6A-EDB3-4B56-8DF2-A92A3247C721}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9208CFCE-156A-49CD-9E43-32CE67AAB957}
