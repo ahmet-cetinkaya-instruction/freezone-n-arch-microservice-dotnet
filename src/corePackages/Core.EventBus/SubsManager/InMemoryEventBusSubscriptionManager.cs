@@ -38,6 +38,9 @@ public class InMemoryEventBusSubscriptionManager : IEventBusSubscriptionManager
     {
         // Eğer bu event daha önce eklenmediyse, event listesine eklenir.
         if (!HasSubscriptionsForEvent(eventName))
+            // Basket Service içerisinde
+            // OrderCreated -> OrderCreatedEventHandlerForRemoveBasket
+            // OrderCreated -> OrderCreatedEventHandlerForSendMail
             _handlers.Add(eventName, value: new List<SubscriptionInfo>());
 
         // Eğer bu event handler daha önce eklediyse
@@ -61,7 +64,39 @@ public class InMemoryEventBusSubscriptionManager : IEventBusSubscriptionManager
 
     public void RemoveSubscription<TIntegrationEvent, TIntegrationEventHandler>()
         where TIntegrationEvent : IntegrationEvent
-        where TIntegrationEventHandler : IIntegrationEventHandler<TIntegrationEvent> => throw new NotImplementedException();
+        where TIntegrationEventHandler : IIntegrationEventHandler<TIntegrationEvent>
+    {
+        string eventName = GetEventKey<TIntegrationEvent>();
+        SubscriptionInfo? handlerToRemove = findSubscription(eventName, typeof(TIntegrationEventHandler));
+        removeHandler(eventName, handlerToRemove);
+    }
+
+    private SubscriptionInfo? findSubscription(string eventName, Type handleType) =>
+        _handlers[eventName].SingleOrDefault(subsInfo => subsInfo.HandleType == handleType);
+
+    private void removeHandler(string eventName, SubscriptionInfo? handlerToRemove)
+    {
+        // Handler tarafında remove işlemi
+        if (handlerToRemove != null)
+            _handlers[eventName].Remove(handlerToRemove);
+        if (!_handlers[eventName].Any())
+        {
+            _handlers.Remove(eventName);
+
+            // EventTypes tarafında remove işlemi
+            Type? eventType = _eventTypes.SingleOrDefault(e => e.Name == eventName);
+            if (eventType != null)
+                _eventTypes.Remove(eventType);
+        }
+        // OnEventRemoved event'i tetiklenir.
+        raiseOnEventRemoved(eventName);
+    }
+
+    private void raiseOnEventRemoved(string eventName)
+    {
+        EventHandler<string> handler = OnEventRemoved; // OnEventRemoved event'i tetiklenir.
+        handler?.Invoke(sender: this, eventName);
+    }
 
     public void Clear() => throw new NotImplementedException();
 
@@ -75,7 +110,7 @@ public class InMemoryEventBusSubscriptionManager : IEventBusSubscriptionManager
     public string GetEventKey<TIntegrationEvent>()
         where TIntegrationEvent : IntegrationEvent
     {
-        string eventName = typeof(TIntegrationEvent).Name; // OrderCreatedIntegrationEvent
-        return EventNameGetter(eventName); // OrderCreated
+        string eventName = typeof(TIntegrationEvent).Name; // Kod tarafında: class OrderCreatedIntegrationEvent
+        return EventNameGetter(eventName); // RabbitMQ tarafında: OrderCreated
     }
 }
