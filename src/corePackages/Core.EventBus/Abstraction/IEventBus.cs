@@ -6,14 +6,13 @@ public interface IEventBus
 {
     void Publish(IntegrationEvent @event);
 
-
     // Belirli bir türedeki IntegrationEvent'leri dinlemek için kullanılır. Olayları ilgili işleyiciye (handler) iletmek için kullanılır.
-    void Subscribe<TIntegrationEvent, IIntegrationEventHandler>()
+    void Subscribe<TIntegrationEvent, TIntegrationEventHandler>()
         where TIntegrationEvent : IntegrationEvent
-        where IIntegrationEventHandler : IIntegrationEventHandler<TIntegrationEvent>;
+        where TIntegrationEventHandler : IIntegrationEventHandler<TIntegrationEvent>;
 
     // Belirli bir türedeki IntegrationEvent'leri dinlemekten vazgeçmek için kullanılır.
-    void Unsubscribe<TIntegrationEvent, IIntegrationEventHandler>()
+    void Unsubscribe<TIntegrationEvent, TIntegrationEventHandler>()
         where TIntegrationEvent : IntegrationEvent
-        where IIntegrationEventHandler : IIntegrationEventHandler<TIntegrationEvent>;
+        where TIntegrationEventHandler : IIntegrationEventHandler<TIntegrationEvent>;
 } 

@@ -29,8 +29,3 @@ public class EventBusConfig
     public bool DeleteEventSuffix => !string.IsNullOrEmpty(EventNameSuffix);
     #endregion
 }
-
-public enum EventBusType
-{
-    RabbitMQ
-}
