@@ -3,10 +3,10 @@
 public class SubscriptionInfo
 {
     // Integration event handler'in tipini burada tutucağız. Type üzerinden Handle metoduna ulaşabileceğiz.
-    public Type HandleType { get; }
+    public Type HandlerType { get; }
 
-    public SubscriptionInfo(Type handleType)
+    public SubscriptionInfo(Type handlerType)
     {
-        HandleType = handleType;
+        HandlerType = handlerType ?? throw new ArgumentNullException(nameof(handlerType), "Handler type must not be null.");
     }
 }

@@ -44,7 +44,7 @@ public class InMemoryEventBusSubscriptionManager : IEventBusSubscriptionManager
             _handlers.Add(eventName, value: new List<SubscriptionInfo>());
 
         // Eğer bu event handler daha önce eklediyse
-        if (_handlers[eventName].Any(subsInfo => subsInfo.HandleType == integrationEventHandlerType))
+        if (_handlers[eventName].Any(subsInfo => subsInfo.HandlerType == integrationEventHandlerType))
             throw new ArgumentException(
                 $"Bu event daha önce eklenmiş: {integrationEventHandlerType.Name}",
                 paramName: nameof(integrationEventHandlerType)
@@ -72,7 +72,7 @@ public class InMemoryEventBusSubscriptionManager : IEventBusSubscriptionManager
     }
 
     private SubscriptionInfo? findSubscription(string eventName, Type handleType) =>
-        _handlers[eventName].SingleOrDefault(subsInfo => subsInfo.HandleType == handleType);
+        _handlers[eventName].SingleOrDefault(subsInfo => subsInfo.HandlerType == handleType);
 
     private void removeHandler(string eventName, SubscriptionInfo? handlerToRemove)
     {
