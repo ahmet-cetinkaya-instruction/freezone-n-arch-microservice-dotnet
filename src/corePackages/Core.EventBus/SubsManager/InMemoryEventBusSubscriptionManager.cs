@@ -98,14 +98,22 @@ public class InMemoryEventBusSubscriptionManager : IEventBusSubscriptionManager
         handler?.Invoke(sender: this, eventName);
     }
 
-    public void Clear() => throw new NotImplementedException();
+    public void Clear()
+    {
+        _handlers.Clear();
+    }
 
-    public Type? GetEventTypeByName(string eventName) => throw new NotImplementedException();
+    public Type? GetEventTypeByName(string eventName) => _eventTypes.SingleOrDefault(type => type.Name == eventName);
 
     public IEnumerable<SubscriptionInfo> GetHandlersForEvent<TIntegrationEvent>()
-        where TIntegrationEvent : IntegrationEvent => throw new NotImplementedException();
+        where TIntegrationEvent : IntegrationEvent
+    {
+        string eventName = GetEventKey<TIntegrationEvent>();
+        return GetHandlersForEvent(eventName);
+    }
 
-    public IEnumerable<SubscriptionInfo> GetHandlersForEvent(string eventName) => throw new NotImplementedException();
+    public IEnumerable<SubscriptionInfo> GetHandlersForEvent(string eventName)
+        => _handlers[eventName]; // List<SubscriptionInfo>
 
     public string GetEventKey<TIntegrationEvent>()
         where TIntegrationEvent : IntegrationEvent
