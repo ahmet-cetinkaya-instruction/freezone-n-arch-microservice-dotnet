@@ -22,6 +22,7 @@ public class EventBusConfig
     // Event isimlerinin önüne ve sonuna eklenecek prefix ve suffix'leri belirtir.
     public string EventNamePrefix { get; set; } = string.Empty;
     public string EventNameSuffix { get; set; } = "IntegrationEvent";
+    public string DefaultTopicName { get; set; } = "Microservice EventBus";
     #endregion
 
     #region Helper getters

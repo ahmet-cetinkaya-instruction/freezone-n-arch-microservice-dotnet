@@ -63,7 +63,7 @@ public class RabbitMQPersistentConnection : IDisposable
         // Model oluşturulurken bağlantı kontrolü yapılır.
         if (!IsConnected)
             throw new InvalidOperationException("RabbitMQ bağlantısı yok.");
-        // Model oluşturulur.
+        // Channel Model oluşturulur.
         return _connection!.CreateModel();
     }
 
