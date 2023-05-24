@@ -103,7 +103,7 @@ public class InMemoryEventBusSubscriptionManager : IEventBusSubscriptionManager
         _handlers.Clear();
     }
 
-    public Type? GetEventTypeByName(string eventName) => _eventTypes.SingleOrDefault(type => type.Name == eventName);
+    public Type? GetEventTypeByName(string eventName) => _eventTypes.SingleOrDefault(type => type.Name == eventName); // OrderCreatedIntegrationEvent
 
     public IEnumerable<SubscriptionInfo> GetHandlersForEvent<TIntegrationEvent>()
         where TIntegrationEvent : IntegrationEvent

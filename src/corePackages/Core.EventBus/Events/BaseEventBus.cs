@@ -1,6 +1,8 @@
 ﻿using Core.EventBus.Abstraction;
 using Core.EventBus.SubsManager;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using System.Reflection;
 
 namespace Core.EventBus.Events;
 
@@ -51,12 +53,12 @@ public abstract class BaseEventBus : IEventBus, IDisposable
     {
         eventName = ProcessEventName(eventName);
 
-        if (EventBusSubscriptionManager
-            .HasSubscriptionsForEvent(eventName)) // İlgili event'e subscribe olunmuş mu, consume edecek miyiz?
+        bool isProcessed = false;
+
+        if (EventBusSubscriptionManager.HasSubscriptionsForEvent(eventName)) // İlgili event'e subscribe olunmuş mu, consume edecek miyiz?
         {
             // Bu event'e subscribe olan tüm handler'ları alıyoruz.
-            IEnumerable<SubscriptionInfo> subscriptions = EventBusSubscriptionManager
-                .GetHandlersForEvent(eventName);
+            IEnumerable<SubscriptionInfo> subscriptions = EventBusSubscriptionManager.GetHandlersForEvent(eventName);
 
             // Servislerin aynı scope kapsamında türetilmesini ve iletilmesini sağlamak için kullanılır.
             using (IServiceScope scope = ServiceProvider.CreateScope()) // Microsoft.Extensions.DependencyInjection.Abstraction
@@ -65,21 +67,40 @@ public abstract class BaseEventBus : IEventBus, IDisposable
                 foreach (SubscriptionInfo subscriptionInfo in subscriptions)
                 {
                     // Örn. OrderCreated için OrderCreatedIntegrationEventHandler
-                    object? handler = scope.ServiceProvider.GetService(subscriptionInfo.HandlerType);
-                    if(handler == null) continue;  // Servisler içerisinde kayıt yoksa diğer handler'dan devam edebiliriz.
-                    
-                    //TODO: Event Type'ı alıcaz.
-                    //TODO: JSON olarak gelen message'ı Deserilize edicez. (IntegrationEvent)
-                    //TODO: Handler sınıfını, interface'i tanımlıycaz. (reflection)
-                    //TODO: İçerisindeki Handle metodunu tanımlaycaz,
-                    //TODO: İlgili event parametresiyle beraber Handle metodunu çalıştırıcaz.
+                    object? integrationEventHandler = scope.ServiceProvider.GetService(subscriptionInfo.HandlerType);
+                    if (integrationEventHandler == null)
+                        continue; // Servisler içerisinde kayıt yoksa diğer handler'dan devam edebiliriz.
 
-                    //TODO: Bu eventin herhangi bir handler tarafından işlenip işlenmediğini döndürücez.
+                    //TODO: Event Type'ı alıcaz.
+                    Type integrationEventType =
+                        EventBusSubscriptionManager.GetEventTypeByName(
+                            $"{EventBusConfig?.EventNamePrefix}{eventName}{EventBusConfig?.EventNameSuffix}" // Örn. OrderCreatedIntegrationEvent
+                        ) ?? throw new InvalidOperationException("Event Type can not be null.");
+
+                    //TODO: JSON olarak gelen message'ı Deserilize edicez. (IntegrationEvent)
+                    object? integrationEvent = JsonConvert.DeserializeObject(value: message, type: integrationEventType);
+
+                    //TODO: Handler sınıfını, interface'i tanımlıycaz. (reflection)
+                    Type integrationEventHandlerConcreteType =
+                        typeof(IIntegrationEventHandler<>).MakeGenericType(integrationEventType)
+                        ?? throw new InvalidOperationException("Concrete Type can not be null.");
+
+                    //TODO: İçerisindeki Handle metodunu tanımlaycaz,
+                    MethodInfo integrationEventHandlerHandleMethod =
+                        integrationEventHandlerConcreteType.GetMethod("Handle")
+                        ?? throw new InvalidOperationException("Handle Method can not be null.");
+
+                    //TODO: İlgili event parametresiyle beraber Handle metodunu çalıştırıcaz.
+                    await (Task)
+                        integrationEventHandlerHandleMethod.Invoke(obj: integrationEventHandler, parameters: new[] { integrationEvent })!;
                 }
             }
+
+            //TODO: Bu eventin herhangi bir handler tarafından işlenip işlenmediğini döndürücez.
+            isProcessed = true;
         }
 
-        return true;
+        return isProcessed;
     }
 
     public virtual void Dispose()
