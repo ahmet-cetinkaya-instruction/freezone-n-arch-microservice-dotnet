@@ -1,6 +1,11 @@
 ﻿using Core.EventBus.Events;
+using Newtonsoft.Json;
+using Polly;
+using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
+using System.Net.Sockets;
 using System.Text;
 
 namespace Core.EventBus.RabbitMQ;
@@ -118,7 +123,7 @@ public class RabbitMQEventBus : BaseEventBus
     {
         // SubsManager'dan aboneliği kaldırmak için bu metot yeterli.
         EventBusSubscriptionManager.RemoveSubscription<TIntegrationEvent, TIntegrationEventHandler>();
-        // RabbitMQ tarafında da aboneliği kaldırmak için burada yapmak yerine, kaldırılığından emin olmak için 
+        // RabbitMQ tarafında da aboneliği kaldırmak için burada yapmak yerine, kaldırılığından emin olmak için
         // SubsManader'deki OnEventRemoved event'ini dinleyip, orada kaldırılmasını sağlayabiliriz.
     }
 
@@ -129,11 +134,7 @@ public class RabbitMQEventBus : BaseEventBus
         if (!_connection.IsConnected)
             _connection.TryConnect();
 
-        _consumerChannel.QueueUnbind(
-            queue: eventName,
-            exchange: EventBusConfig?.DefaultTopicName,
-            routingKey: eventName
-            );
+        _consumerChannel.QueueUnbind(queue: eventName, exchange: EventBusConfig?.DefaultTopicName, routingKey: eventName);
 
         if (!EventBusSubscriptionManager.IsEmpty)
             _consumerChannel.Close();
@@ -143,5 +144,54 @@ public class RabbitMQEventBus : BaseEventBus
     {
         if (!_connection.IsConnected)
             _connection.TryConnect();
+
+        // Gönderme işlemlerinde sorun olmasına karşın retry mekanizması ekliyoruz.
+        RetryPolicy policy = Policy
+            .Handle<BrokerUnreachableException>()
+            .Or<SocketException>()
+            .WaitAndRetry(
+                retryCount: EventBusConfig.ConnectionRetryCount,
+                sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                onRetry: (ex, time) => {
+                    // Logging
+                }
+            );
+
+        // Evet ismini alıyoruz.
+        string eventName = @event.GetType().Name; // OrderCreatedIntegrationEvent
+        eventName = ProcessEventName(eventName); // OrderCreated
+
+        // Event'i JSON string'e çeviriyoruz.
+        string message = JsonConvert.SerializeObject(@event);
+        // Json string'i byte dizisine çeviriyoruz.
+        byte[] body = Encoding.UTF8.GetBytes(message);
+
+        // Event'i karşılayan bir exchange olmasını garantiye alıyoruz.
+        _consumerChannel.ExchangeDeclare(exchange: EventBusConfig.DefaultTopicName, type: "direct"); //TODO: Exchange ismini ve type'ını dinamik olarak alabiliriz.
+
+        // Event'i RabbitMQ'deki exchange'e publish ediyoruz.
+        policy.Execute(() =>
+        {
+            IBasicProperties properties = _consumerChannel.CreateBasicProperties();
+            properties.DeliveryMode = 2; // Persistent olarak işaretliyoruz. Yani RabbitMQ'da restart olsa bile mesajlarımız kaybolmayacak.
+
+            // Kuyruğun tanımla (default)
+            _consumerChannel.QueueDeclare(
+                queue: GetSubName(eventName), // Örn. OrderService.OrderCreated
+                durable: true, // Kuyruğun kalıcı olmasını istiyoruz.
+                exclusive: false, // Kuyruğun sadece bu bağlantı tarafından kullanılmamasını istiyoruz.
+                autoDelete: false, // Kuyrukda mesaj kalmadığında kuyruğun silinmesini istemiyoruz.
+                arguments: null // Kuyruk için ekstra argümanlar vermek istemiyoruz.
+            );
+
+            // Event'i RabbitMQ tarafına publish edebiliriz.
+            _consumerChannel.BasicPublish(
+                exchange: EventBusConfig.DefaultTopicName,
+                routingKey: eventName,
+                mandatory: true, // Exchange'e publish edilemeyen mesajlar için basic.return event'i gönderilir.
+                properties,
+                body
+            );
+        });
     }
 }
