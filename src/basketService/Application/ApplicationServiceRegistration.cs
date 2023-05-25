@@ -6,11 +6,15 @@ using Core.Application.Pipelines.Validation;
 using Core.Application.Rules;
 using Core.CrossCuttingConcerns.Logging.Serilog;
 using Core.CrossCuttingConcerns.Logging.Serilog.Logger;
+using Core.EventBus.Abstraction;
+using Core.EventBus.Events;
+using Core.EventBus.Factory;
 using Core.Mailing;
 using Core.Mailing.MailKitImplementations;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using Application.Services.BasketItems;
 
 namespace Application;
 
@@ -37,6 +41,20 @@ public static class ApplicationServiceRegistration
         services.AddSingleton<IMailService, MailKitMailService>();
         services.AddSingleton<LoggerServiceBase, FileLogger>();
 
+        services.AddSingleton<IEventBus>(serviceProvider =>
+        {
+            EventBusConfig config =
+                new()
+                {
+                    ConnectionRetryCount = 5,
+                    EventNameSuffix = "IntegrationEvent",
+                    SubscriberClientAppName = "BasketService",
+                    EventBusType = EventBusType.RabbitMQ,
+                };
+            return EventBusFactory.Create(config, serviceProvider);
+        });
+
+        services.AddScoped<IBasketItemsService, BasketItemsManager>();
         return services;
     }
 
