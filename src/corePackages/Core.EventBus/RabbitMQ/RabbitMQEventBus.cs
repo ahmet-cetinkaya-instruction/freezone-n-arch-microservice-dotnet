@@ -116,12 +116,27 @@ public class RabbitMQEventBus : BaseEventBus
 
     public override void Unsubscribe<TIntegrationEvent, TIntegrationEventHandler>()
     {
+        // SubsManager'dan aboneliği kaldırmak için bu metot yeterli.
         EventBusSubscriptionManager.RemoveSubscription<TIntegrationEvent, TIntegrationEventHandler>();
+        // RabbitMQ tarafında da aboneliği kaldırmak için burada yapmak yerine, kaldırılığından emin olmak için 
+        // SubsManader'deki OnEventRemoved event'ini dinleyip, orada kaldırılmasını sağlayabiliriz.
     }
 
     private void EventBusSubscriptionManager_OnEventRemoved(object? sender, string eventName)
     {
-        // TODO: Implement
+        eventName = ProcessEventName(eventName);
+
+        if (!_connection.IsConnected)
+            _connection.TryConnect();
+
+        _consumerChannel.QueueUnbind(
+            queue: eventName,
+            exchange: EventBusConfig?.DefaultTopicName,
+            routingKey: eventName
+            );
+
+        if (!EventBusSubscriptionManager.IsEmpty)
+            _consumerChannel.Close();
     }
 
     public override void Publish(IntegrationEvent @event)
