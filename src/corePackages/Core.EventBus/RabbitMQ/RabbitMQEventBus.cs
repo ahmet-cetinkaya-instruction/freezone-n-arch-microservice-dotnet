@@ -85,18 +85,21 @@ public class RabbitMQEventBus : BaseEventBus
 
         _consumerChannel.BasicConsume(
             queue: GetSubName(eventName), // Örn. OrderService.OrderCreated
-            autoAck: false, // Auto Acknowledge'ı devre dışı bırakıyoruz. Çünkü biz event'i process ettiğimizde acknowledge'ı biz göndereceğiz.
+            autoAck: false, // Auto Acknowledge'ı devre dışı bırakıyoruz. Çünkü biz event'i process ettiğimizde acknowledge'ı biz göndereceğiz. Satır no 114
             consumer
         );
     }
 
     private void Consumer_Received(object? sender, BasicDeliverEventArgs eventArgs)
     {
+        // Event name'i alıyoruz.
         string eventName = eventArgs.RoutingKey;
         eventName = ProcessEventName(eventName);
 
+        // Event mesaj byte dizisini string'e çeviriyoruz.
         string message = Encoding.UTF8.GetString(eventArgs.Body.Span); // JSON string
 
+        // Event'i proje dahilinde ilgili handler sınıfını bulup process ediyoruz.
         try
         {
             ProcessEvent(eventName, message).GetAwaiter();
@@ -106,6 +109,9 @@ public class RabbitMQEventBus : BaseEventBus
             Console.WriteLine(e);
             // Logging
         }
+
+        // Event'i process ettikten sonra acknowledge gönderiyoruz. Mesajın teslim alındığını ve işlediğimizi onaylıyoruz.
+        _consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
     }
 
     public override void Unsubscribe<TIntegrationEvent, TIntegrationEventHandler>()
