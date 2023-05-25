@@ -24,7 +24,7 @@ public interface IEventBusSubscriptionManager
     bool HasSubscriptionsForEvent(string eventName);
 
     // Bir event'i ismiyle Type'ını almak için kullanılır.
-    Type? GetEventTypeByName(string eventName);
+    Type? GetEventTypeByName(string eventTypeName);
 
     IEnumerable<SubscriptionInfo> GetHandlersForEvent<TIntegrationEvent>() where TIntegrationEvent : IntegrationEvent;
     IEnumerable<SubscriptionInfo> GetHandlersForEvent(string eventName);
