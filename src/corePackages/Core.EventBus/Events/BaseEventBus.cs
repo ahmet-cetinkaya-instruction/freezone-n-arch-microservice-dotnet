@@ -71,32 +71,34 @@ public abstract class BaseEventBus : IEventBus, IDisposable
                     if (integrationEventHandler == null)
                         continue; // Servisler içerisinde kayıt yoksa diğer handler'dan devam edebiliriz.
 
-                    //TODO: Event Type'ı alıcaz.
+                    // Event Type'ı alıcaz.
                     Type integrationEventType =
                         EventBusSubscriptionManager.GetEventTypeByName(
-                            $"{EventBusConfig?.EventNamePrefix}{eventName}{EventBusConfig?.EventNameSuffix}" // Örn. OrderCreatedIntegrationEvent
+                            eventTypeName: $"{EventBusConfig?.EventNamePrefix}{eventName}{EventBusConfig?.EventNameSuffix}" // Örn. OrderCreatedIntegrationEvent
                         ) ?? throw new InvalidOperationException("Event Type can not be null.");
 
-                    //TODO: JSON olarak gelen message'ı Deserilize edicez. (IntegrationEvent)
+                    // JSON olarak gelen message'ı Deserilize edicez. (IntegrationEvent)
                     object? integrationEvent = JsonConvert.DeserializeObject(value: message, type: integrationEventType);
 
-                    //TODO: Handler sınıfını, interface'i tanımlıycaz. (reflection)
+                    // Handler sınıfını, interface'i tanımlıycaz. (reflection)
                     Type integrationEventHandlerConcreteType =
-                        typeof(IIntegrationEventHandler<>).MakeGenericType(integrationEventType)
+                        typeof(IIntegrationEventHandler<>).MakeGenericType(integrationEventType) // Örn. class OrderCreatedIntegrationEventHandler : IIntegrationEventHandler<OrderCreatedIntegrationEvent>
                         ?? throw new InvalidOperationException("Concrete Type can not be null.");
 
-                    //TODO: İçerisindeki Handle metodunu tanımlaycaz,
+                    // İçerisindeki Handle metodunu tanımlaycaz,
                     MethodInfo integrationEventHandlerHandleMethod =
                         integrationEventHandlerConcreteType.GetMethod("Handle")
                         ?? throw new InvalidOperationException("Handle Method can not be null.");
 
-                    //TODO: İlgili event parametresiyle beraber Handle metodunu çalıştırıcaz.
+                    // İlgili event parametresiyle beraber Handle metodunu çalıştırıcaz.
                     await (Task)
                         integrationEventHandlerHandleMethod.Invoke(obj: integrationEventHandler, parameters: new[] { integrationEvent })!;
+
+                    // integrationEventHandler.Handle(integrationEvent);
                 }
             }
 
-            //TODO: Bu eventin herhangi bir handler tarafından işlenip işlenmediğini döndürücez.
+            // Bu eventin herhangi bir handler tarafından işlenip işlenmediğini döndürücez.
             isProcessed = true;
         }
 
