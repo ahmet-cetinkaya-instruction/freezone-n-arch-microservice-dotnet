@@ -20,4 +20,24 @@ public class OrderCreatedIntegrationEvent : IntegrationEvent
         Address = address;
         BasketItems = basketItems;
     }
+
+    public class OrderCreatedIntegrationEventHandler : IIntegrationEventHandler<OrderCreatedIntegrationEvent>
+    {
+        private readonly IBasketItemRepository _basketItemRepository;
+        private readonly ILogger<OrderCreatedIntegrationEventHandler> _logger;
+
+        public OrderCreatedIntegrationEventHandler(IBasketItemRepository basketItemRepository, ILogger<OrderCreatedIntegrationEventHandler> logger)
+        {
+            _basketItemRepository = basketItemRepository;
+            _logger = logger;
+        }
+
+        public async Task Handle(OrderCreatedIntegrationEvent @event)
+        {
+            List<BasketItem> basketItems = _basketItemRepository.Query().Where(bi => bi.UserId == @event.UserId).ToList();
+
+            await _basketItemRepository.DeleteRangeAsync(basketItems);
+            _logger.LogInformation($"Basket items of user with id {@event.UserId} deleted.");
+        }
+    }
 }

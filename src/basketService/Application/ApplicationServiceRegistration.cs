@@ -1,3 +1,4 @@
+using Application.Features.BasketItems.Events.OrderCreated;
 using Core.Application.Pipelines.Authorization;
 using Core.Application.Pipelines.Caching;
 using Core.Application.Pipelines.Logging;
@@ -53,6 +54,7 @@ public static class ApplicationServiceRegistration
                 };
             return EventBusFactory.Create(config, serviceProvider);
         });
+        services.AddTransient<OrderCreatedIntegrationEvent.OrderCreatedIntegrationEventHandler>();
 
         services.AddScoped<IBasketItemsService, BasketItemsManager>();
         return services;
