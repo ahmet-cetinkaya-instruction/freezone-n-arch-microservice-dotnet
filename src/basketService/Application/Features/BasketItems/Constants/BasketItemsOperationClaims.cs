@@ -10,4 +10,5 @@ public static class BasketItemsOperationClaims
     public const string Create = "BasketItems.Create";
     public const string Update = "BasketItems.Update";
     public const string Delete = "BasketItems.Delete";
+    public const string Checkout = "BasketItems.Checkout";
 }

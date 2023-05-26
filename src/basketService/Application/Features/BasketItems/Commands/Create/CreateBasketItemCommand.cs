@@ -8,6 +8,7 @@ namespace Application.Features.BasketItems.Commands.Create;
 
 public class CreateBasketItemCommand : IRequest<CreatedBasketItemResponse>
 {
+    public int Id { get; set; }
     public int UserId { get; set; }
     public string ProductId { get; set; }
     public string ProductName { get; set; }

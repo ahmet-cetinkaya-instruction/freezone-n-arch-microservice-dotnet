@@ -6,6 +6,7 @@ using Application.Features.BasketItems.Queries.GetList;
 using Core.Application.Requests;
 using Core.Application.Responses;
 using Microsoft.AspNetCore.Mvc;
+using Application.Features.BasketItems.Commands.Checkout;
 
 namespace WebAPI.Controllers;
 
@@ -49,6 +50,13 @@ public class BasketItemsController : BaseController
     {
         GetListBasketItemQuery getListBasketItemQuery = new() { PageRequest = pageRequest };
         GetListResponse<GetListBasketItemListItemDto> response = await Mediator.Send(getListBasketItemQuery);
+        return Ok(response);
+    }
+    
+    [HttpPut("Checkout")]
+    public async Task<IActionResult> Checkout([FromBody] CheckoutCommand checkoutCommand)
+    {
+        CheckoutResponse response = await Mediator.Send(checkoutCommand);
         return Ok(response);
     }
 }
