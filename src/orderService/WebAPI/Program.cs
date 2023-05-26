@@ -4,6 +4,7 @@ using Core.CrossCuttingConcerns.Exceptions.Extensions;
 using Persistence;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using WebAPI;
+using WebAPI.Events;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -54,5 +55,7 @@ WebApiConfiguration webApiConfiguration =
     app.Configuration.GetSection(webApiConfigurationSection).Get<WebApiConfiguration>()
     ?? throw new InvalidOperationException($"\"{webApiConfigurationSection}\" section cannot found in configuration.");
 app.UseCors(opt => opt.WithOrigins(webApiConfiguration.AllowedOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials());
+
+app.Services.ConfigureEventBusSubscriptions(app.Lifetime);
 
 app.Run();

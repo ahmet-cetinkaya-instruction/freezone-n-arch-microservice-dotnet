@@ -1,3 +1,4 @@
+using Application.Features.OrderItems.Events.OrderCreated;
 using Core.Application.Pipelines.Authorization;
 using Core.Application.Pipelines.Caching;
 using Core.Application.Pipelines.Logging;
@@ -6,11 +7,15 @@ using Core.Application.Pipelines.Validation;
 using Core.Application.Rules;
 using Core.CrossCuttingConcerns.Logging.Serilog;
 using Core.CrossCuttingConcerns.Logging.Serilog.Logger;
+using Core.EventBus.Abstraction;
+using Core.EventBus.Events;
+using Core.EventBus.Factory;
 using Core.Mailing;
 using Core.Mailing.MailKitImplementations;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using Application.Services.OrderItems;
 
 namespace Application;
 
@@ -36,7 +41,20 @@ public static class ApplicationServiceRegistration
 
         services.AddSingleton<IMailService, MailKitMailService>();
         services.AddSingleton<LoggerServiceBase, FileLogger>();
+        services.AddSingleton<IEventBus>(serviceProvider =>
+        {
+            EventBusConfig config =
+                new()
+                {
+                    EventNameSuffix = "IntegrationEvent",
+                    SubscriberClientAppName = "OrderService",
+                    EventBusType = EventBusType.RabbitMQ,
+                };
+            return EventBusFactory.Create(config, serviceProvider);
+        });
+        services.AddTransient<OrderCreatedIntegrationEvent.OrderCreatedIntegrationEventHandler>();
 
+        services.AddScoped<IOrderItemsService, OrderItemsManager>();
         return services;
     }
 
