@@ -80,8 +80,16 @@ public class ElasticSearchManager : IElasticSearch
 
         // ElasticSearch'e toplu veri gönderme/yeni indeksleme isteğini gönderiyoruz.
         BulkResponse response = await elasticClient.BulkAsync(
-            bulkDescriptor => bulkDescriptor.Index(model.IndexName) // Hangi index'e gönderileceğini belirtiyoruz.
-                                            .IndexMany(model.Items) // Yapacağımız index işlemini belirtiyoruz.
+            bulkDescriptor =>
+                bulkDescriptor
+                    .Index(model.IndexName) // Hangi index'e gönderileceğini belirtiyoruz.
+                    .IndexMany(
+                        model.Items,
+                        (descriptor, item) =>
+                            descriptor // ElasticSearch'e gönderilecek olan verinin hangi index'e gönderileceğini belirtiyoruz.
+                                .Index(model.IndexName) // Index adı
+                                .Id((item as InsertUpdateManyModel).ElasticId) // ElasticSearch belge id'si
+                    )
         );
 
         return new ElasticSearchResult(
@@ -90,29 +98,94 @@ public class ElasticSearchManager : IElasticSearch
         );
     }
 
-    public Task<IReadOnlyDictionary<IndexName, IndexState>> GetIndexListAsync()
+    public async Task<IReadOnlyDictionary<IndexName, IndexState>> GetIndexListAsync()
     {
-        throw new NotImplementedException();
+        ElasticClient elasticClient = new(_connectionSettings);
+
+        GetIndexResponse response = await elasticClient.Indices.GetAsync(new GetIndexRequest(Indices.All));
+
+        return response.Indices;
     }
 
-    public Task<IList<ElasticSearchGetModel<TDocument>>> GetAllSearchAsync<TDocument>(SearchParametersModel model)
+    public async Task<IList<ElasticSearchGetModel<TDocument>>> GetAllSearchAsync<TDocument>(SearchParametersModel model)
         where TDocument : class
     {
-        throw new NotImplementedException();
+        ElasticClient elasticClient = new(_connectionSettings);
+
+        // ElasticSearch'te arama isteğini gönderiyoruz.
+        ISearchResponse<TDocument> response = await elasticClient.SearchAsync<TDocument>(
+            se =>
+                se.Index(Indices.Index(model.IndexName)) // Hangi index'te arama yapılacağını belirtiyoruz.
+                    .From(model.From) // Arama sonuçlarının kaçıncı sıradan başlayacağını belirtiyoruz.
+                    .Size(model.Size) // Arama sonuçlarının kaç tanesinin döndürüleceğini belirtiyoruz.
+        );
+
+        // ElasticSearch'ten gelen sonuçları ElasticSearchGetModel'e çeviriyoruz.
+        List<ElasticSearchGetModel<TDocument>> list = response.Hits // Search işleminin sonuçları
+            .Select(hit => new ElasticSearchGetModel<TDocument>(elasticId: hit.Id, item: hit.Source))
+            .ToList();
+        return list;
     }
 
-    public Task<IList<ElasticSearchGetModel<TDocument>>> GetSearchByFieldAsync<TDocument>(SearchByFieldParametersModel model)
+    public async Task<IList<ElasticSearchGetModel<TDocument>>> GetSearchByFieldAsync<TDocument>(SearchByFieldParametersModel model)
         where TDocument : class
     {
-        throw new NotImplementedException();
+        ElasticClient elasticClient = new(_connectionSettings);
+
+        // ElasticSearch'te arama isteğini gönderiyoruz.
+        ISearchResponse<TDocument> response = await elasticClient.SearchAsync<TDocument>(
+            se =>
+                se.Index(model.IndexName) // Hangi index'te arama yapılacağını belirtiyoruz.
+                    .From(model.From) // Arama sonuçlarının kaçıncı sıradan başlayacağını belirtiyoruz.
+                    .Size(model.Size) // Arama sonuçlarının kaç tanesinin döndürüleceğini belirtiyoruz.
+                    .Query(q => q.Term(t => t.Field(model.FieldName).Value(model.Value))) // Arama sorgusunu belirtiyoruz.
+        );
+
+        // ElasticSearch'ten gelen sonuçları ElasticSearchGetModel'e çeviriyoruz.
+        List<ElasticSearchGetModel<TDocument>> list = response.Hits
+            .Select(hit => new ElasticSearchGetModel<TDocument>(elasticId: hit.Id, item: hit.Source))
+            .ToList();
+        return list;
     }
 
-    public Task<IList<ElasticSearchGetModel<TDocument>>> GetSearchBySimpleQueryString<TDocument>(
-        SearchByQueryParametersModel parametersModel
-    )
+    public async Task<IList<ElasticSearchGetModel<TDocument>>> GetSearchBySimpleQueryString<TDocument>(SearchByQueryParametersModel model)
         where TDocument : class
     {
-        throw new NotImplementedException();
+        ElasticClient elasticClient = new(_connectionSettings);
+
+        // ElasticSearch'te arama isteğini gönderiyoruz.
+        ISearchResponse<TDocument> response = await elasticClient.SearchAsync<TDocument>(
+            se =>
+                se.Index(model.IndexName)
+                    .From(model.From)
+                    .Size(model.Size)
+                    .MatchAll() // Tüm belgelerde eşleşme arıyoruz.
+                    .Query(
+                        q =>
+                            q.SimpleQueryString(
+                                d =>
+                                    d.Name(model.QueryName) // Arama sorgusunu belirtiyoruz.
+                                        .Fields(model.Fields) // Arama sorgusunun hangi alanlarda yapılacağını belirtiyoruz.
+                                        .Query(model.Query) // Arama sorgusunu belirtiyoruz.
+                                        .Analyzer("standard") // Kullanilacak analizleyiciyi belirtiyoruz.
+                                        .DefaultOperator(Operator.Or) // Arama sorgusunda kullanılacak varsayilan operatörü belirtiyoruz.
+                                        .Flags(SimpleQueryStringFlags.And | SimpleQueryStringFlags.Near)
+                                        .Lenient() // Esnek sorgu modunu etkinleştiriyor.
+                                        .AnalyzeWildcard(false) // Jokere izin verilip verilmeyeceğini belirtiyoruz.
+                                        .MinimumShouldMatch("30%") // Arama sorgusunun en az kaç alanla eşleşmesi gerektiğini belirtiyoruz. Örneğin arama motorlarındaki Bunu mu demek istediğiniz şeklindeki önermeler gibi.
+                                        .FuzzyPrefixLength(0) // Yakın eşleşme için kullanılacak ön ek uzunluğunu belirtiyoruz.
+                                        .FuzzyMaxExpansions(50) // Yakın eşleşme için kullanılacak maksimum genişleme sayısını belirtiyoruz.
+                                        .FuzzyTranspositions() // Yakın eşleşme için karakterlerin yer değiştirmesine izin verilip verilmeyeceğini belirtiyoruz.
+                                        .AutoGenerateSynonymsPhraseQuery(false) // Eşanlamlı kelimelerin otomatik olarak oluşturulup oluşturulmayacağını belirtiyoruz.
+                            )
+                    )
+        );
+
+        // ElasticSearch'ten gelen sonuçları ElasticSearchGetModel'e çeviriyoruz.
+        List<ElasticSearchGetModel<TDocument>> list = response.Hits
+            .Select(hit => new ElasticSearchGetModel<TDocument>(elasticId: hit.Id, item: hit.Source))
+            .ToList();
+        return list;
     }
 
     public Task<IElasticSearchResult> UpdateByElasticIdAsync(InsertUpdateModel model)
