@@ -188,13 +188,30 @@ public class ElasticSearchManager : IElasticSearch
         return list;
     }
 
-    public Task<IElasticSearchResult> UpdateByElasticIdAsync(InsertUpdateModel model)
+    public async Task<IElasticSearchResult> UpdateByElasticIdAsync(InsertUpdateModel model)
     {
-        throw new NotImplementedException();
+        ElasticClient elasticClient = new(_connectionSettings);
+
+        UpdateResponse<object> response = await elasticClient.UpdateAsync<object>(
+            model.ElasticId,
+            selector: se => se.Index(model.IndexName).Doc(model.Item)
+        );
+
+        return new ElasticSearchResult(
+            success: response.IsValid,
+            message: response.IsValid ? "Document updated successfully." : response.ServerError.Error.Reason
+        );
     }
 
-    public Task<IElasticSearchResult> DeleteByElasticIdAsync(ElasticSearchModel model)
+    public async Task<IElasticSearchResult> DeleteByElasticIdAsync(ElasticSearchModel model)
     {
-        throw new NotImplementedException();
+        ElasticClient elasticClient = new(_connectionSettings);
+
+        DeleteResponse response = await elasticClient.DeleteAsync<object>(model.ElasticId, selector: se => se.Index(model.IndexName));
+
+        return new ElasticSearchResult(
+            success: response.IsValid,
+            message: response.IsValid ? "Document deleted successfully." : response.ServerError.Error.Reason
+        );
     }
 }
