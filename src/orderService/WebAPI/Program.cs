@@ -35,6 +35,7 @@ builder.Services.AddSwaggerGen(opt =>
 });
 
 builder.Services.AddHostedService<TestBackgroundService>();
+builder.Services.AddTransient<HangfireTestJob>();
 
 // Hangfire.AspNetCore, Hangfire.Core,
 builder.Services.AddHangfire(
@@ -44,7 +45,7 @@ builder.Services.AddHangfire(
             .UseSimpleAssemblyNameTypeSerializer() // Assembly Serileştirme
             .UseRecommendedSerializerSettings() // Serileştirme
             .UseInMemoryStorage() // Hangfire.InMemory
-            //.UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")) // Hangfire.SqlServer
+//.UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")) // Hangfire.SqlServer
 ); // Configuration
 builder.Services.AddHangfireServer(); // Hangfire Server
 
@@ -75,5 +76,19 @@ WebApiConfiguration webApiConfiguration =
 app.UseCors(opt => opt.WithOrigins(webApiConfiguration.AllowedOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials());
 
 app.Services.ConfigureEventBusSubscriptions(app.Lifetime);
+
+RecurringJob.AddOrUpdate(
+    recurringJobId: "HangfireRecurringTest",
+    methodCall: () => app.Services.GetService<ILogger>().LogInformation("Hangfire HangfireRecurringTest Job is working."),
+    cronExpression: Cron.Minutely,
+    timeZone: TimeZoneInfo.Utc
+);
+RecurringJob.AddOrUpdate(
+    recurringJobId: "HangfireRecurringJobClassTest",
+    methodCall: () => app.Services.GetService<HangfireTestJob>().RunAsync(),
+    cronExpression: Cron.Minutely,
+    timeZone: TimeZoneInfo.Utc
+);
+BackgroundJob.Enqueue(() => app.Services.GetService<ILogger>().LogInformation("Hangfire HangfireBackgrouncJobTest Job is working."));
 
 app.Run();
