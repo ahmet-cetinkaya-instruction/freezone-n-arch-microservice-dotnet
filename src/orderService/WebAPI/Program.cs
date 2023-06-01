@@ -1,6 +1,6 @@
-using Application;
+﻿using Application;
 using Core.CrossCuttingConcerns.Exceptions.Extensions;
-
+using Hangfire;
 using Persistence;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using WebAPI;
@@ -36,6 +36,18 @@ builder.Services.AddSwaggerGen(opt =>
 
 builder.Services.AddHostedService<TestBackgroundService>();
 
+// Hangfire.AspNetCore, Hangfire.Core,
+builder.Services.AddHangfire(
+    configuration: config =>
+        config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180) // Versiyon uyumluluk seviyesi
+            .UseSimpleAssemblyNameTypeSerializer() // Assembly Serileştirme
+            .UseRecommendedSerializerSettings() // Serileştirme
+            .UseInMemoryStorage() // Hangfire.InMemory
+            //.UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")) // Hangfire.SqlServer
+); // Configuration
+builder.Services.AddHangfireServer(); // Hangfire Server
+
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -51,7 +63,10 @@ if (app.Environment.IsDevelopment())
 if (app.Environment.IsProduction())
     app.ConfigureCustomExceptionMiddleware();
 
+app.UseHangfireDashboard(); // Hangfire Dashboard'ı ekleyen yapıyı kullanacağımızı belirtiyoruz.
+
 app.MapControllers();
+app.MapHangfireDashboard(); // localhost:5002/hangfire
 
 const string webApiConfigurationSection = "WebAPIConfiguration";
 WebApiConfiguration webApiConfiguration =
