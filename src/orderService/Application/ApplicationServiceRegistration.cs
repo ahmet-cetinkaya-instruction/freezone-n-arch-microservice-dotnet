@@ -16,6 +16,7 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using Application.Services.OrderItems;
+using Core.ElasticSearch;
 
 namespace Application;
 
@@ -55,6 +56,9 @@ public static class ApplicationServiceRegistration
         services.AddTransient<OrderCreatedIntegrationEvent.OrderCreatedIntegrationEventHandler>();
 
         services.AddScoped<IOrderItemsService, OrderItemsManager>();
+
+        services.AddSingleton<IElasticSearch, ElasticSearchManager>();
+
         return services;
     }
 
