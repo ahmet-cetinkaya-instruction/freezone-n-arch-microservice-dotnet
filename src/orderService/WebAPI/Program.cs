@@ -5,6 +5,7 @@ using Persistence;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using WebAPI;
 using WebAPI.Events;
+using WebAPI.Jobs;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,8 @@ builder.Services.AddSwaggerGen(opt =>
 {
     opt.SwaggerDoc(name: "v1", info: new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Order Service" });
 });
+
+builder.Services.AddHostedService<TestBackgroundService>();
 
 WebApplication app = builder.Build();
 
