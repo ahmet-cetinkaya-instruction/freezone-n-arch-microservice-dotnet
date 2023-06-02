@@ -34,7 +34,7 @@ public class ElasticSearchTestController : ControllerBase
                     ProductId = "1",
                     ProductName = "Laptop",
                     UnitPrice = 1000,
-                    Quantity = "1",
+                    Quantity = 1,
                     UserId = 1
                 }
             );

@@ -11,7 +11,11 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(configure =>
+{
+    AuditConfiguration.ConfigureAudit(builder.Services, builder.Configuration);
+    AuditConfiguration.AddWebApiAudit(configure);
+});
 builder.Services.AddApplicationServices();
 
 builder.Services.AddPersistenceServices(builder.Configuration);

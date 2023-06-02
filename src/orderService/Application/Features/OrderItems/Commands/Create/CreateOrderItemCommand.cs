@@ -14,7 +14,7 @@ public class CreateOrderItemCommand : IRequest<CreatedOrderItemResponse>
     public string ProductId { get; set; }
     public string ProductName { get; set; }
     public decimal UnitPrice { get; set; }
-    public string Quantity { get; set; }
+    public int Quantity { get; set; }
     public string Address { get; set; }
 
     public class CreateOrderItemCommandHandler : IRequestHandler<CreateOrderItemCommand, CreatedOrderItemResponse>

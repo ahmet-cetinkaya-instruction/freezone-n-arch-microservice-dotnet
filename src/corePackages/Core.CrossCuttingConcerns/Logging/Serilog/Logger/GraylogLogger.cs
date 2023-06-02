@@ -16,7 +16,11 @@ public class GraylogLogger : LoggerServiceBase
             configuration.GetSection(configurationSection).Get<GraylogConfiguration>()
             ?? throw new Exception(SerilogMessages.NullOptionsMessage);
 
-        Logger = new LoggerConfiguration().WriteTo
+        Logger = CreateLogger(config);
+    }
+
+    public static ILogger CreateLogger(GraylogConfiguration config) =>
+        new LoggerConfiguration().WriteTo
             .Graylog(
                 new GraylogSinkOptions()
                 {
@@ -26,5 +30,4 @@ public class GraylogLogger : LoggerServiceBase
                 }
             )
             .CreateLogger();
-    }
 }
