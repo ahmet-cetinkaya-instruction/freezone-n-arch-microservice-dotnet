@@ -44,6 +44,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.ElasticSearch", "src\c
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkerService1", "WorkerService1\WorkerService1.csproj", "{7CD53A1D-5499-4AB3-BBEB-91044BACBD3C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.Consul", "src\corePackages\Core.Consul\Core.Consul.csproj", "{A4A1DF56-95B8-4CA3-966D-E142EB913D53}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -118,6 +120,10 @@ Global
 		{7CD53A1D-5499-4AB3-BBEB-91044BACBD3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7CD53A1D-5499-4AB3-BBEB-91044BACBD3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7CD53A1D-5499-4AB3-BBEB-91044BACBD3C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4A1DF56-95B8-4CA3-966D-E142EB913D53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4A1DF56-95B8-4CA3-966D-E142EB913D53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4A1DF56-95B8-4CA3-966D-E142EB913D53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4A1DF56-95B8-4CA3-966D-E142EB913D53}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -143,6 +149,7 @@ Global
 		{742068D9-FA3F-4A0D-84AC-AF83A5BFD3C2} = {403A7B6A-EDB3-4B56-8DF2-A92A3247C721}
 		{28D0FE12-6B59-4B78-A9DC-D7A0A1C6DD3E} = {403A7B6A-EDB3-4B56-8DF2-A92A3247C721}
 		{7CD53A1D-5499-4AB3-BBEB-91044BACBD3C} = {5915494C-75EA-4D22-8965-9FF2FA9B4BF9}
+		{A4A1DF56-95B8-4CA3-966D-E142EB913D53} = {403A7B6A-EDB3-4B56-8DF2-A92A3247C721}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9208CFCE-156A-49CD-9E43-32CE67AAB957}
