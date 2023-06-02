@@ -1,4 +1,5 @@
 ﻿using Application;
+using Core.Consul;
 using Core.CrossCuttingConcerns.Exceptions.Extensions;
 using Hangfire;
 using Persistence;
@@ -53,6 +54,8 @@ builder.Services.AddHangfire(
 ); // Configuration
 builder.Services.AddHangfireServer(); // Hangfire Server
 
+builder.Services.AddConsul(builder.Configuration);
+
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -94,5 +97,7 @@ RecurringJob.AddOrUpdate(
     timeZone: TimeZoneInfo.Utc
 );
 BackgroundJob.Enqueue(() => app.Services.GetService<ILogger>().LogInformation("Hangfire HangfireBackgrouncJobTest Job is working."));
+
+app.UseConsul(app.Lifetime, app.Configuration.GetSection("Consul").Get<ConsulConfiguration>());
 
 app.Run();

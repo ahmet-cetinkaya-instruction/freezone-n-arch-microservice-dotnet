@@ -1,4 +1,5 @@
 using Application;
+using Core.Consul;
 using Core.CrossCuttingConcerns.Exceptions.Extensions;
 using Persistence;
 using Swashbuckle.AspNetCore.SwaggerUI;
@@ -32,6 +33,8 @@ builder.Services.AddSwaggerGen(opt =>
     opt.SwaggerDoc(name: "v1", info: new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Basket Service" });
 });
 
+builder.Services.AddConsul(builder.Configuration);
+
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -55,5 +58,7 @@ WebApiConfiguration webApiConfiguration =
 app.UseCors(opt => opt.WithOrigins(webApiConfiguration.AllowedOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials());
 
 app.Services.ConfigureEventBusSubscriptions(app.Lifetime);
+
+app.UseConsul(app.Lifetime, app.Configuration.GetSection("Consul").Get<ConsulConfiguration>());
 
 app.Run();

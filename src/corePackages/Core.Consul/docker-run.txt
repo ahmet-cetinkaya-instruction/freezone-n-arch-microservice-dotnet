@@ -1,0 +1,1 @@
+docker run -d --name="local_consul" -p 8500:8500 -p 8600:8600/udp consul agent -ui -server -bootstrap-expect=1 -client="0.0.0.0"

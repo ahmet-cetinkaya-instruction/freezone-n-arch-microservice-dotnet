@@ -50,6 +50,13 @@ public static class ConsulRegistration
                 Address = serviceAddress.Host,
                 Port = serviceAddress.Port,
                 Tags = new[] { configuration.ServiceId, configuration.ServiceName }.Union(configuration.ServiceTags.Split(",")).ToArray(),
+                Check = new AgentCheckRegistration()
+                {
+                    HTTP = $"{serviceAddress.Scheme}://{serviceAddress.Host}:{serviceAddress.Port}/api/Health/Status",
+                    Timeout = TimeSpan.FromSeconds(3),
+                    Interval = TimeSpan.FromSeconds(10),
+                    Notes = "Checks /health/status on the service",
+                }
             };
         consulClient.Agent.ServiceDeregister(registration.ID).Wait();
         consulClient.Agent.ServiceRegister(registration).Wait();
